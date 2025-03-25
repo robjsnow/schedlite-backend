@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { isBefore } from 'date-fns';
+import validator from 'validator';
 
 const router = Router();
 
@@ -12,6 +13,11 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ message: 'slotId, name, and email are required.' });
       return;
     }
+
+    if (!validator.isEmail(email)) {
+        res.status(400).json({ message: 'Invalid email format.' });
+        return;
+      }
     
     try {
       const slot = await prisma.calendarSlot.findUnique({ where: { id: slotId } });

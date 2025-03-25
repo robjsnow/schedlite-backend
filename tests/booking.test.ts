@@ -69,18 +69,16 @@ describe('Booking Routes', () => {
   });
 
   it('should reject booking a slot in the past', async () => {
-    // Create a past-time slot
     const pastSlotRes = await request(app)
       .post('/api/slots')
       .set('Authorization', `Bearer ${jwtToken}`)
       .send({
-        startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-        endTime: new Date(Date.now() - 90 * 60 * 1000).toISOString(),      // 1.5 hours ago
+        startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
       });
 
     const pastSlotId = pastSlotRes.body.id;
 
-    // Try to book it
     const res = await request(app).post('/api/book').send({
       slotId: pastSlotId,
       name: 'Too Late',
@@ -91,5 +89,26 @@ describe('Booking Routes', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Cannot book a slot in the past.');
   });
-});
 
+  it('should reject booking with invalid email format', async () => {
+    const slotRes = await request(app)
+      .post('/api/slots')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({
+        startTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+      });
+
+    const invalidSlotId = slotRes.body.id;
+
+    const res = await request(app).post('/api/book').send({
+      slotId: invalidSlotId,
+      name: 'Invalid Email',
+      email: 'not-an-email',
+      note: 'This should fail',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Invalid email format.');
+  });
+});
