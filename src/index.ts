@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth';
 
 // Load environment variables
 dotenv.config();
@@ -13,6 +14,9 @@ const port: number = parseInt(process.env.PORT || '3000', 10);
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+
+// Register middleware
+app.use('/api/auth', authRoutes); // ✅ using `router`, not a function
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {
