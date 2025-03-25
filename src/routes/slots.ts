@@ -79,5 +79,31 @@ router.get('/available', async (req: Request, res: Response): Promise<void> => {
     }
   });
   
+  router.delete('/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const slotId = req.params.id;
+  
+    const slot = await prisma.calendarSlot.findUnique({ where: { id: slotId } });
+  
+    if (!slot) {
+      res.status(404).json({ message: 'Slot not found.' });
+      return;
+    }
+  
+    if (slot.userId !== req.userId) {
+      res.status(403).json({ message: 'You do not own this slot.' });
+      return;
+    }
+  
+    if (slot.isBooked) {
+      res.status(400).json({ message: 'Cannot delete a slot that is already booked.' });
+      return;
+    }
+  
+    await prisma.calendarSlot.delete({ where: { id: slotId } });
+  
+    res.status(200).json({ message: 'Slot deleted successfully.' });
+    return;
+  });
+  
 
 export default router;
