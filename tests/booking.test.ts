@@ -67,4 +67,29 @@ describe('Booking Routes', () => {
     expect(res.status).toBe(409); // Conflict
     expect(res.body.message).toMatch(/already booked/i);
   });
+
+  it('should reject booking a slot in the past', async () => {
+    // Create a past-time slot
+    const pastSlotRes = await request(app)
+      .post('/api/slots')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({
+        startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+        endTime: new Date(Date.now() - 90 * 60 * 1000).toISOString(),      // 1.5 hours ago
+      });
+
+    const pastSlotId = pastSlotRes.body.id;
+
+    // Try to book it
+    const res = await request(app).post('/api/book').send({
+      slotId: pastSlotId,
+      name: 'Too Late',
+      email: 'late@example.com',
+      note: 'Missed it',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Cannot book a slot in the past.');
+  });
 });
+
