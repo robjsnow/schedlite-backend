@@ -1,61 +1,59 @@
-# SchedLite 🗓️ (WIP)
+# SchedLite
 
-SchedLite is an open-source scheduling backend built with TypeScript, Express, and PostgreSQL.
+**Project Status**: 🚧 *Active Development*  
+*SchedLite is currently in active development and not yet production-ready. Contributions, suggestions, and testing are welcome!*
 
-✨ It’s designed to be:
-
-    🪶 Lightweight — no bloated dashboards, just what you need
-
-    🧠 Easy to use — minimal setup, clear routes, and simple integration
-
-    🔓 Self-hosted — you stay in control of your data and deployment
-
-    🆓 Free — open-source under the MIT license, ready for anyone to use or extend
-  
-
-> ⚠️ This project is in early development. It's not ready for production yet — but it’s getting there, and contributors are very welcome!
-
-
-## 💬 Join the SchedLite Discord
-
-Have ideas, questions, or want to contribute?  
-Join the conversation on our Discord server! https://discord.gg/F9WHHRrqbZ
+**Community**:  
+Join our [Discord server](https://discord.gg/F9WHHRrqbZ) to discuss ideas, ask questions, or contribute to the project.
 
 ---
 
-## ✅ Current Features (so far)
+## Overview
 
-- 🔐 Register/login system with JWT authentication
-- 🛡️ Middleware to protect routes
-- 🧪 Basic tests using Vitest + Supertest
-- 🌱 PostgreSQL + Prisma setup
-- 🧱 Express + TypeScript architecture
+SchedLite is a lightweight, self-hosted scheduling application designed for small business owners. Built with **TypeScript**, **Express**, **PostgreSQL**, and **Prisma**, it offers essential scheduling features without unnecessary complexity.
 
 ---
 
-## 🚧 In Progress / Upcoming
+## Features
 
-- 🗓️ Calendar availability and booking routes
-- 🔁 Stripe integration (for booking payments)
-- 📅 Google Calendar + Zoom sync
-- 🧩 Multi-tenant support for self-hosted client scheduling
-- 📖 Admin dashboard or embeddable frontend (eventually)
+- **User Authentication**: Secure registration and login with JWT authentication.  
+- **Calendar Management**: Create and manage availability slots.  
+- **Booking System**: Clients can book available slots; includes validation to prevent past or overlapping bookings.  
+- **Stripe Integration**: Accept payments for bookings seamlessly.  
+- **Google Calendar & Zoom Sync**: Synchronize appointments with Google Calendar and set up Zoom meetings automatically.  
+- **Multi-Tenant Support**: Manage multiple businesses or clients within a single instance.  
+- **Admin Dashboard**: An intuitive interface for business owners to oversee bookings and availability.  
+- **Client Interface**: A user-friendly page for clients to select available times and make bookings.  
 
 ---
 
-## 🔧 Local Development
+## Getting Started
 
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/robjsnow/schedlite.git
 cd schedlite
 
 # Install dependencies
 npm install
 
-# Create .env file
+# Create a .env file
 cp .env.example .env
-# Then edit .env with your own database connection + JWT secret
+# Then fill in your DATABASE_URL and JWT_SECRET
 
-# Run development server
+# Run the development server
 npm run dev
+
+```
+
+## Contributing
+
+We welcome contributions! If you'd like to fix a bug, suggest a feature, or help shape the roadmap, feel free to open an issue or pull request.
+
+## License
+
+SchedLite is licensed under the [MIT License](LICENSE).
+
+---
+
+Note: This README provides a general overview of the project. For technical documentation or route details, please refer to the source code or future wiki.
