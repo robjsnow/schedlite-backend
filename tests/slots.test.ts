@@ -87,5 +87,28 @@ describe('Slot Routes', () => {
     expect(res2.status).toBe(409); // Conflict
     expect(res2.body.message).toBe('Slot overlaps with an existing one.');
   });
+
+  it('should delete a slot the user owns if not booked', async () => {
+    // First, create a new slot
+    const createRes = await request(app)
+      .post('/api/slots')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({
+        startTime: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), // +5hr
+        endTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),   // +6hr
+      });
+
+    const slotIdToDelete = createRes.body.id;
+    expect(createRes.status).toBe(201);
+
+    // Now, delete it
+    const deleteRes = await request(app)
+      .delete(`/api/slots/${slotIdToDelete}`)
+      .set('Authorization', `Bearer ${jwtToken}`);
+
+    expect(deleteRes.status).toBe(200);
+    expect(deleteRes.body.message).toBe('Slot deleted successfully.');
+  });
+
   
 });

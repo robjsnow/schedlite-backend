@@ -106,4 +106,22 @@ router.get('/available', async (req: Request, res: Response): Promise<void> => {
   });
   
 
+router.get('/mine', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (!req.userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+    try {
+      const slots = await prisma.calendarSlot.findMany({
+        where: { userId: req.userId },
+        orderBy: { startTime: 'desc' },
+        include: { booking: true }, // include booking info if any
+      });
+  
+      res.json(slots);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch your slots.' });
+    }
+  }); 
 export default router;
