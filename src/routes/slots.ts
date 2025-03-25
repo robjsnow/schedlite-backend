@@ -17,15 +17,36 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
     res.status(400).json({ message: 'Start and end time are required.' });
     return;
   }
-
   try {
+    const newStart = new Date(startTime);
+    const newEnd = new Date(endTime);
+  
+    // Check for overlapping slots
+    const overlapping = await prisma.calendarSlot.findFirst({
+      where: {
+        userId: req.userId,
+        OR: [
+          {
+            startTime: { lt: newEnd },
+            endTime: { gt: newStart },
+          },
+        ],
+      },
+    });
+  
+    if (overlapping) {
+      res.status(409).json({ message: 'Slot overlaps with an existing one.' });
+      return;
+    }
+  
     const slot = await prisma.calendarSlot.create({
       data: {
         userId: req.userId,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        startTime: newStart,
+        endTime: newEnd,
       },
     });
+  
 
     res.status(201).json(slot);
     return;

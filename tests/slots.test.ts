@@ -59,4 +59,33 @@ describe('Slot Routes', () => {
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.find((s: any) => s.id === createdSlotId)).toBeDefined();
   });
+
+  it('should prevent overlapping availability slots', async () => {
+    const startTime = new Date(Date.now() + 2 * 60 * 60 * 1000); // +2hr
+    const endTime = new Date(Date.now() + 3 * 60 * 60 * 1000);   // +3hr
+  
+    // Create first slot
+    const res1 = await request(app)
+      .post('/api/slots')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+      });
+  
+    expect(res1.status).toBe(201);
+  
+    // Try to create overlapping slot (starts before end, ends after start)
+    const res2 = await request(app)
+      .post('/api/slots')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({
+        startTime: new Date(startTime.getTime() + 15 * 60 * 1000).toISOString(), // +2h15m
+        endTime: new Date(endTime.getTime() + 30 * 60 * 1000).toISOString(),     // +3h30m
+      });
+  
+    expect(res2.status).toBe(409); // Conflict
+    expect(res2.body.message).toBe('Slot overlaps with an existing one.');
+  });
+  
 });
