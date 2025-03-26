@@ -1,4 +1,4 @@
-# SchedLite
+# SchedLite Backend
 
 **Project Status**: 🚧 *Active Development*  
 *SchedLite is currently in active development and not yet production-ready. Contributions, suggestions, and testing are welcome!*
@@ -16,14 +16,12 @@ SchedLite is a lightweight, self-hosted scheduling application designed for smal
 
 ## Features (WIP)
 
-- **User Authentication**: Secure registration and login with JWT authentication.  
-- **Calendar Management**: Create and manage availability slots.  
-- **Booking System**: Clients can book available slots; includes validation to prevent past or overlapping bookings.  
-- **Stripe Integration**: Accept payments for bookings seamlessly.  
-- **Google Calendar & Zoom Sync**: Synchronize appointments with Google Calendar and set up Zoom meetings automatically.  
-- **Multi-Tenant Support**: Manage multiple businesses or clients within a single instance.  
-- **Admin Dashboard**: An intuitive interface for business owners to oversee bookings and availability.  
-- **Client Interface**: A user-friendly page for clients to select available times and make bookings.  
+- 🔐 **JWT Authentication**
+- 📅 **Availability & Booking System**
+- 💸 **Stripe Integration**
+- 📆 **Google Calendar + Zoom Sync**
+- 🧩 **Multi-Tenant Support**
+- 🔧 **REST API for Admin and Client Interfaces**
 
 ---
 
