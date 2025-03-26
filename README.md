@@ -29,7 +29,7 @@ SchedLite is a lightweight, self-hosted scheduling application designed for smal
 
 ```bash
 # Clone the repository
-git clone https://github.com/robjsnow/schedlite.git
+git clone https://github.com/robjsnow/schedlite-backend.git
 cd schedlite
 
 # Install dependencies
