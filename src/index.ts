@@ -11,7 +11,7 @@ import bookingRoutes from './routes/bookings';
 dotenv.config();
 
 const app = express();
-const port: number = parseInt(process.env.PORT || '3000', 10);
+const port: number = parseInt(process.env.PORT || '3330', 10);
 
 // Middleware
 app.use(cors());

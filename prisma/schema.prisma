@@ -42,4 +42,5 @@ model Booking {
   email     String
   createdAt DateTime      @default(now())
   note      String?
+  status    String        @default("confirmed") // Options: confirmed, completed, cancelled, expired
 }
