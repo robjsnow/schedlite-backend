@@ -14,7 +14,7 @@ SchedLite is a lightweight, self-hosted scheduling application designed for smal
 
 ---
 
-## Features
+## Features (WIP)
 
 - **User Authentication**: Secure registration and login with JWT authentication.  
 - **Calendar Management**: Create and manage availability slots.  
