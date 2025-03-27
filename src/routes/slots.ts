@@ -151,62 +151,90 @@ router.get('/mine', authMiddleware, async (req: AuthenticatedRequest, res: Respo
       const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
   
       const rule = schedule.find((s: any) => s.day === weekday && s.enabled);
-      if (!rule) continue;
+      if (!rule || !Array.isArray(rule.blocks)) continue;
   
-      const [startH, startM] = rule.start.split(':');
-      const [endH, endM] = rule.end.split(':');
+      for (const block of rule.blocks) {
+        const [startH, startM] = block.start.split(':');
+        const [endH, endM] = block.end.split(':');
   
-      const start = new Date(date);
-      start.setHours(Number(startH), Number(startM), 0, 0);
+        const start = new Date(date);
+        start.setHours(Number(startH), Number(startM), 0, 0);
   
-      const end = new Date(date);
-      end.setHours(Number(endH), Number(endM), 0, 0);
+        const end = new Date(date);
+        end.setHours(Number(endH), Number(endM), 0, 0);
   
-      slotsToCreate.push({ startTime: start, endTime: end, userId });
+        slotsToCreate.push({ startTime: start, endTime: end, userId });
+      }
     }
   
     // Apply overrides
-
-overrides.forEach((override: any) => {
-  const date = new Date(override.date);
-  const existingIdx = slotsToCreate.findIndex(slot =>
-    slot.startTime.toDateString() === date.toDateString()
-  );
-
-  if (override.status === 'unavailable') {
-    if (existingIdx !== -1) slotsToCreate.splice(existingIdx, 1);
-  } else if (
-    override.status === 'available' &&
-    typeof override.start === 'string' &&
-    typeof override.end === 'string'
-  ) {
-    const [startH, startM] = override.start.split(':');
-    const [endH, endM] = override.end.split(':');
-
-    const start = new Date(date);
-    start.setHours(Number(startH), Number(startM), 0, 0);
-
-    const end = new Date(date);
-    end.setHours(Number(endH), Number(endM), 0, 0);
-
-    slotsToCreate.push({ startTime: start, endTime: end, userId });
-  }
-});
+    overrides.forEach((override: any) => {
+      const date = new Date(override.date);
+      const existingIdxs = slotsToCreate
+        .map((slot, idx) => ({ slot, idx }))
+        .filter(obj => obj.slot.startTime.toDateString() === date.toDateString())
+        .map(obj => obj.idx);
+  
+      // Remove all existing slots for that day
+      for (let i = existingIdxs.length - 1; i >= 0; i--) {
+        slotsToCreate.splice(existingIdxs[i], 1);
+      }
+  
+      if (
+        override.status === 'available' &&
+        typeof override.start === 'string' &&
+        typeof override.end === 'string'
+      ) {
+        const [startH, startM] = override.start.split(':');
+        const [endH, endM] = override.end.split(':');
+  
+        const start = new Date(date);
+        start.setHours(Number(startH), Number(startM), 0, 0);
+  
+        const end = new Date(date);
+        end.setHours(Number(endH), Number(endM), 0, 0);
+  
+        slotsToCreate.push({ startTime: start, endTime: end, userId });
+      }
+      // else: unavailable — we've already removed default slots, so no further action
+    });
+  
 
   
+
+  
+    // Delete old unbooked slots
     await prisma.calendarSlot.deleteMany({
       where: {
         userId,
-        startTime: { gte: today },
         isBooked: false,
+        startTime: { gte: today },
+        booking: null,
       },
     });
+  
+    // 🆕 Delete and re-create overrides
+    await prisma.availabilityOverride.deleteMany({ where: { userId } });
+  
+    const formattedOverrides = overrides.map((o: any) => ({
+      userId,
+      date: new Date(o.date),
+      status: o.status,
+      startTime: o.start || null,
+      endTime: o.end || null,
+    }));
+  
+    console.log('📦 Saving overrides:', formattedOverrides);
+  
+    if (formattedOverrides.length > 0) {
+      await prisma.availabilityOverride.createMany({ data: formattedOverrides });
+    }
   
     await prisma.calendarSlot.createMany({ data: slotsToCreate });
   
     res.status(201).json({ message: 'Availability updated.' });
   });
-
+  
   router.post('/generate', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       if (!req.userId) {
@@ -223,6 +251,64 @@ overrides.forEach((override: any) => {
       return;
     }
   });
+
+  router.get('/overrides', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.userId) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+      }
+  
+      const overrides = await prisma.availabilityOverride.findMany({
+        where: { userId: req.userId },
+        orderBy: { date: 'asc' },
+      });
+  
+      res.json(overrides); // ✅ No need to `return` this
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch overrides.' });
+    }
+  });
+  
+  router.post('/rules', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { schedule } = req.body;
+    const userId = req.userId;
+  
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+  
+    if (!Array.isArray(schedule)) {
+      res.status(400).json({ message: 'Invalid schedule data.' });
+      return;
+    }
+  
+    try {
+      // Delete existing rules
+      await prisma.availabilityRule.deleteMany({ where: { userId } });
+  
+      const rulesToCreate = schedule.flatMap((day: any) => {
+        if (!day.enabled || !Array.isArray(day.blocks)) return [];
+        const dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(day.day);
+        return day.blocks.map((block: any) => ({
+          userId,
+          dayOfWeek,
+          startTime: block.start,
+          endTime: block.end,
+        }));
+      });
+  
+      await prisma.availabilityRule.createMany({ data: rulesToCreate });
+  
+      res.status(200).json({ message: 'Availability rules saved.' });
+    } catch (err) {
+      console.error('Error saving rules:', err);
+      res.status(500).json({ message: 'Failed to save rules.' });
+    }
+  });
+  
   
   
 export default router;

@@ -24,12 +24,12 @@ export async function generateFutureSlotsForUser(userId: string): Promise<void> 
         const start = new Date(`${date.toDateString()} ${override.startTime}`);
         const end = new Date(`${date.toDateString()} ${override.endTime}`);
         newSlots.push({ userId, startTime: start, endTime: end });
-        continue;
+        continue; // override takes precedence
       }
     }
 
-    const rule = rules.find((r) => r.dayOfWeek === dayNumber);
-    if (rule) {
+    const dayRules = rules.filter((r) => r.dayOfWeek === dayNumber);
+    for (const rule of dayRules) {
       const start = new Date(`${date.toDateString()} ${rule.startTime}`);
       const end = new Date(`${date.toDateString()} ${rule.endTime}`);
       newSlots.push({ userId, startTime: start, endTime: end });
