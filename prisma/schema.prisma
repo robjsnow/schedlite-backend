@@ -14,33 +14,69 @@ datasource db {
 }
 
 model User {
-  id        String         @id @default(uuid())
-  email     String         @unique
-  password  String
-  createdAt DateTime       @default(now())
-  slots     CalendarSlot[]
-  bookings  Booking[]
+  id                    String                 @id @default(uuid())
+  email                 String                 @unique
+  password              String
+  createdAt             DateTime               @default(now())
+  slots                 CalendarSlot[]
+  bookings              Booking[]
+  availabilityRules     AvailabilityRule[]
+  availabilityOverrides AvailabilityOverride[]
+  SessionType           SessionType[]
+}
+
+model AvailabilityRule {
+  id        String @id @default(uuid())
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+  dayOfWeek Int // 0 (Sunday) to 6 (Saturday)
+  startTime String // e.g., "08:00"
+  endTime   String // e.g., "17:00"
+}
+
+model AvailabilityOverride {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  date      DateTime
+  status    String // "unavailable" | "custom"
+  startTime String? // required if custom
+  endTime   String? // required if custom
 }
 
 model CalendarSlot {
-  id        String     @id @default(uuid())
-  user      User       @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
   userId    String
   startTime DateTime
   endTime   DateTime
-  isBooked  Boolean    @default(false)
-  booking   Booking?   @relation("SlotBooking")
+  isBooked  Boolean  @default(false)
+  booking   Booking? @relation("SlotBooking")
 }
 
+model SessionType {
+  id         String       @id @default(uuid())
+  user       User         @relation(fields: [userId], references: [id])
+  userId     String
+  name       String
+  duration   Int
+  price      Int?
+  createdAt  DateTime     @default(now())
+  bookings   Booking[]
+}
+
+
 model Booking {
-  id        String        @id @default(uuid())
-  slot      CalendarSlot  @relation("SlotBooking", fields: [slotId], references: [id])
-  slotId    String        @unique
-  user      User?         @relation(fields: [userId], references: [id])
-  userId    String?
-  name      String
-  email     String
-  createdAt DateTime      @default(now())
-  note      String?
-  status    String        @default("confirmed") // Options: confirmed, completed, cancelled, expired
+  id            String       @id @default(uuid())
+  slot          CalendarSlot @relation("SlotBooking", fields: [slotId], references: [id])
+  slotId        String       @unique
+  user          User?        @relation(fields: [userId], references: [id])
+  userId        String?
+  sessionType   SessionType  @relation(fields: [sessionTypeId], references: [id])
+  sessionTypeId String
+  name          String
+  email         String
+  createdAt     DateTime     @default(now())
+  note          String?
+  status        String       @default("confirmed")
 }

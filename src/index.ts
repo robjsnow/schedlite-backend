@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import slotsRoutes from './routes/slots';
 import bookingRoutes from './routes/bookings';
-
+import sessionRoutes from './routes/sessions';
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +23,7 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/slots', slotsRoutes);
 app.use('/api/book', bookingRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {

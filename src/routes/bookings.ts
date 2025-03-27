@@ -8,10 +8,10 @@ const router = Router();
 
 // Book an available slot
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-  const { slotId, name, email, note } = req.body;
+  const { slotId, name, email, note, sessionTypeId } = req.body;
 
-  if (!slotId || !name || !email) {
-    res.status(400).json({ message: 'slotId, name, and email are required.' });
+  if (!slotId || !name || !email || !sessionTypeId) {
+    res.status(400).json({ message: 'slotId, name, email, and sessionTypeId are required.' });
     return;
   }
 
@@ -39,7 +39,13 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     }
 
     const booking = await prisma.booking.create({
-      data: { slotId, name, email, note },
+      data: {
+        slotId,
+        name,
+        email,
+        note,
+        sessionTypeId,
+      },
     });
 
     await prisma.calendarSlot.update({
