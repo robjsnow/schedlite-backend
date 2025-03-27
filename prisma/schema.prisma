@@ -26,22 +26,24 @@ model User {
 }
 
 model AvailabilityRule {
-  id        String @id @default(uuid())
-  user      User   @relation(fields: [userId], references: [id])
-  userId    String
-  dayOfWeek Int // 0 (Sunday) to 6 (Saturday)
-  startTime String // e.g., "08:00"
-  endTime   String // e.g., "17:00"
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  sessionTypeId String?  // if null, rule applies globally; otherwise, only for that session type
+  dayOfWeek     Int      // 0 (Sunday) to 6 (Saturday)
+  startTime     String   // e.g., "08:00"
+  endTime       String   // e.g., "17:00"
 }
 
 model AvailabilityOverride {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  date      DateTime
-  status    String // "unavailable" | "custom"
-  startTime String? // required if custom
-  endTime   String? // required if custom
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  sessionTypeId String?  // if null, override applies globally; otherwise, for that session type
+  date          DateTime
+  status        String   // e.g., "unavailable" or "custom"
+  startTime     String?  // required if status is custom
+  endTime       String?  // required if status is custom
 }
 
 model CalendarSlot {
