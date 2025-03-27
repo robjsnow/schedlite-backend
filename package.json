@@ -2,7 +2,8 @@
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
     "test": "vitest",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "cron": "ts-node ./scripts/cron.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
