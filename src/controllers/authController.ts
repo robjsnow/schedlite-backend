@@ -1,14 +1,12 @@
-import { Router, Request, Response } from 'express';
-import prisma from '../lib/prisma';
+import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { authMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
+import prisma from '../lib/prisma';
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
-const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
-// Register route
-router.post('/register', async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -33,10 +31,9 @@ router.post('/register', async (req: Request, res: Response) => {
   });
 
   res.status(201).json({ message: 'User registered successfully.' });
-});
+};
 
-// Login route
-router.post('/login', async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
@@ -49,26 +46,23 @@ router.post('/login', async (req: Request, res: Response) => {
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
 
   res.json({ token });
-});
+};
 
+export const getMe = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
+  }
 
-router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-    if (!req.userId) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
-    }
-  
-    const user = await prisma.user.findUnique({
-      where: { id: req.userId },
-      select: { id: true, email: true, createdAt: true }
-    });
-  
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-  
-    res.json(user);
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId },
+    select: { id: true, email: true, createdAt: true },
   });
-  
-export default router;
+
+  if (!user) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+
+  res.json(user);
+};

@@ -1,13 +1,10 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
-import { isBefore } from 'date-fns';
 import validator from 'validator';
-import { authMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
+import { isBefore } from 'date-fns';
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
-const router = Router();
-
-// Book an available slot
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+export const createBooking = async (req: Request, res: Response): Promise<void> => {
   const { slotId, name, email, note, sessionTypeId } = req.body;
 
   if (!slotId || !name || !email || !sessionTypeId) {
@@ -58,16 +55,15 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     console.error(err);
     res.status(500).json({ message: 'Failed to book slot.' });
   }
-});
+};
 
-// Get bookings tied to authenticated user’s slots
-router.get('/mine', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+export const getMyBookings = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!req.userId) {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
+  }
+
   try {
-    if (!req.userId) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
-    }
-
     const bookings = await prisma.booking.findMany({
       where: {
         slot: {
@@ -82,8 +78,7 @@ router.get('/mine', authMiddleware, async (req: AuthenticatedRequest, res: Respo
       },
     });
 
-    // Auto-update expired bookings
-    const updates = bookings.map(async (booking) => {
+    const updates = bookings.map((booking) => {
       if (
         booking.status === 'confirmed' &&
         isBefore(new Date(booking.slot.endTime), new Date())
@@ -97,7 +92,6 @@ router.get('/mine', authMiddleware, async (req: AuthenticatedRequest, res: Respo
 
     await Promise.all(updates);
 
-    // Fetch again with updated statuses
     const updated = await prisma.booking.findMany({
       where: {
         slot: {
@@ -117,10 +111,9 @@ router.get('/mine', authMiddleware, async (req: AuthenticatedRequest, res: Respo
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch bookings.' });
   }
-});
+};
 
-// Cancel a booking by ID (only slot owner can cancel)
-router.patch('/:id/cancel', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+export const cancelBooking = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const bookingId = req.params.id;
 
   try {
@@ -133,12 +126,12 @@ router.patch('/:id/cancel', authMiddleware, async (req: AuthenticatedRequest, re
       res.status(404).json({ message: 'Booking not found.' });
       return;
     }
-    
+
     if (booking.slot.userId !== req.userId) {
       res.status(403).json({ message: 'You are not authorized to cancel this booking.' });
       return;
     }
-    
+
     await prisma.booking.update({
       where: { id: bookingId },
       data: { status: 'cancelled' },
@@ -154,6 +147,4 @@ router.patch('/:id/cancel', authMiddleware, async (req: AuthenticatedRequest, re
     console.error(err);
     res.status(500).json({ message: 'Failed to cancel booking.' });
   }
-});
-
-export default router;
+};
