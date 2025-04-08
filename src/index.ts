@@ -11,6 +11,7 @@ import overrideRoutes from './routes/overridesRoutes';
 import bookingRoutes from './routes/bookingsRoutes';
 import authRoutes from './routes/authRoutes';
 import sessionTypeRoutes from './routes/sessionTypeRoutes';
+import googleRoutes from './routes/integrations/google';
 
 
 
@@ -30,7 +31,7 @@ app.use('/api/rules', ruleRoutes);
 app.use('/api/overrides', overrideRoutes);
 app.use('/api/book', bookingRoutes);
 app.use('/api/session-types', sessionTypeRoutes);
-
+app.use('/api/integrations/google', googleRoutes); 
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {
